@@ -63,6 +63,8 @@ Data output (run time):
 **Post-processing** - The binary files written by HemePure can be converted to human-readable form using [hemeXtract](https://github.com/UCL-CCS/hemeXtract). These can be further processed using (e.g.) Python scripts, some examples of these are in the [cases](cases) folder.
 
 ## Compilation #
+Attempt compilation within a Unix-based environment. Dependency packages come bundled within the `dep` folder but Python3 will also be needed to compile these. 
+
 Build dependencies before attempting to build HemePure. Once dependencies are built, they do not need to be recompiled for (re)compilation of the source code. The following steps can be followed to build the dependency and source code mannually, the FullBuild.sh file collects these into a single location. This file may need to be modified to reflect the settings, defaults and software available on a given machine. This file can be modified to provide alternative functionality and boundary conditions.
 
 For benchmarking, it is recommended to use the SRCbuild_Benchmark function in FullBuild.sh to compile the source code. This enables pressure boundary conditions at inlets and outlets of the domain, and enables more reliable simulation performance and stability for evaluating performance on a given computer.
