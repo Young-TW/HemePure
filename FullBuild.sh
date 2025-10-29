@@ -85,5 +85,5 @@ cd ../..
 
 MODULES
 DEPbuild
-#SRCbuild
-#SRCbuild_Benchmark
+SRCbuild
+SRCbuild_Benchmark
