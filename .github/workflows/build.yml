@@ -77,11 +77,13 @@ jobs:
             apt-get install -q -y build-essential openmpi-bin libopenmpi-dev curl git ca-certificates file
 
           run: |
+            export CFLAGS="-O0 -g"
+            export CXXFLAGS="-O0 -g"
+
             chmod +x ./toolchain.sh
             ./toolchain.sh $(pwd)/toolchain 3.29.9 linux-aarch64
 
             if [ ! -f env.sh ]; then echo "env.sh missing"; exit 1; fi
-
             . ./env.sh
 
             echo "Checking CMake Architecture:"
@@ -92,14 +94,11 @@ jobs:
 
             echo "Patching FullBuild.sh for QEMU stability..."
 
-            # 1. Reduce optimization level: Release (-O3) -> RelWithDebInfo (-O2)
-            sed -i 's/CMAKE_BUILD_TYPE=Release/CMAKE_BUILD_TYPE=RelWithDebInfo/g' FullBuild.sh
+            sed -i 's/Release/Debug/g' FullBuild.sh
 
-            # 2. Disable parallel build: Remove -j (switch to single-core build)
-            # For dep build
-            sed -i 's/cmake --build dep\/build -j/cmake --build dep\/build/g' FullBuild.sh
-            # For src build
-            sed -i 's/cmake --build src\/build -j/cmake --build src\/build/g' FullBuild.sh
+            sed -i 's/-j//g' FullBuild.sh
+
+            cat FullBuild.sh | grep "cmake"
 
             VARIANT="${{ matrix.variant }}"
 
