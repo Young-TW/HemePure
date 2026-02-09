@@ -89,6 +89,18 @@ jobs:
             cmake --version
 
             chmod +x ./FullBuild.sh
+
+            echo "Patching FullBuild.sh for QEMU stability..."
+
+            # 1. Reduce optimization level: Release (-O3) -> RelWithDebInfo (-O2)
+            sed -i 's/CMAKE_BUILD_TYPE=Release/CMAKE_BUILD_TYPE=RelWithDebInfo/g' FullBuild.sh
+
+            # 2. Disable parallel build: Remove -j (switch to single-core build)
+            # For dep build
+            sed -i 's/cmake --build dep\/build -j/cmake --build dep\/build/g' FullBuild.sh
+            # For src build
+            sed -i 's/cmake --build src\/build -j/cmake --build src\/build/g' FullBuild.sh
+
             VARIANT="${{ matrix.variant }}"
 
             if [ -z "$VARIANT" ]; then
