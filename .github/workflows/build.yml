@@ -31,19 +31,13 @@ jobs:
       run: |
         chmod +x ./toolchain.sh
         ./toolchain.sh
-
-        if [ ! -f env.sh ]; then
-          echo "Error: env.sh was not generated."
-          exit 1
-        fi
+        if [ ! -f env.sh ]; then echo "env.sh missing"; exit 1; fi
 
     - name: Build HemePure (${{ matrix.variant == '' && 'Default' || matrix.variant }})
       run: |
         chmod +x ./FullBuild.sh
 
         . ./env.sh
-
-        cmake --version
 
         if [ -z "${{ matrix.variant }}" ]; then
           ./FullBuild.sh
@@ -73,23 +67,24 @@ jobs:
       - name: Prepare Toolchain (CMake)
         run: |
           chmod +x ./toolchain.sh
-
           ./toolchain.sh $(pwd)/toolchain 3.29.9 linux-aarch64
-
-          if [ ! -f env.sh ]; then
-            echo "Error: env.sh was not generated."
-            exit 1
-          fi
+          if [ ! -f env.sh ]; then echo "env.sh missing"; exit 1; fi
 
       - name: Build HemePure (${{ matrix.variant == '' && 'Default' || matrix.variant }})
         run: |
           chmod +x ./FullBuild.sh
-
           . ./env.sh
 
           echo "Checking Architecture:"
           uname -m
           cmake --version
+
+          # Disable AVX2 and SSE3 for ARM builds
+          echo "Disabling AVX2/SSE3 for ARM build..."
+          sed -i 's/export USE_SSE3="ON"/export USE_SSE3="OFF"/g' FullBuild.sh
+          sed -i 's/export USE_AVX2="ON"/export USE_AVX2="OFF"/g' FullBuild.sh
+
+          grep "export USE_" FullBuild.sh
 
           if [ -z "${{ matrix.variant }}" ]; then
             ./FullBuild.sh
