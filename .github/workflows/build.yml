@@ -1,0 +1,51 @@
+name: HemePure Build Test
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        variant: ["", "PP", "VP"]
+
+    steps:
+    - name: Checkout Code
+      uses: actions/checkout@v4
+      with:
+        submodules: recursive
+
+    - name: Install System Dependencies (OpenMPI)
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y build-essential openmpi-bin libopenmpi-dev
+
+    - name: Prepare Toolchain (CMake)
+      run: |
+        chmod +x ./toolchain.sh
+        ./toolchain.sh
+
+        if [ ! -f env.sh ]; then
+          echo "Error: env.sh was not generated."
+          exit 1
+        fi
+
+    - name: Build HemePure (${{ matrix.variant == '' && 'Default' || matrix.variant }})
+      run: |
+        chmod +x ./FullBuild.sh
+
+        . ./env.sh
+
+        cmake --version
+
+        if [ -z "${{ matrix.variant }}" ]; then
+          ./FullBuild.sh
+        else
+          ./FullBuild.sh "${{ matrix.variant }}"
+        fi
