@@ -140,7 +140,7 @@ namespace hemelb
              * Shear-rate returned by CalculateShearRate is dimensionless and CalculateTauForShearRate
              * wants it in units of s^{-1}
              */
-            double shear_rate = LatticeType::CalculateShearRate(localTau, hydroVars.f_neq.f, hydroVars.density)
+            double shear_rate = LatticeType::CalculateShearRate(localTau, hydroVars.f, hydroVars.f_eq.f, hydroVars.density)
                 / mTimeStep;
 
             // Update tau

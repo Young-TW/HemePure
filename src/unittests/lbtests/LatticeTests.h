@@ -323,7 +323,8 @@ namespace hemelb
 
               util::Vector3D<Dimensionless> wallNormal(1.0, 0.0, 0.0);
               util::Matrix3D stressTensor;
-              LatticeType::CalculateStressTensor(density, tau, nonEquilibriumF.data(), stressTensor);
+              std::vector<distribn_t> fEq(LatticeType::NUMVECTORS, 0.0);
+              LatticeType::CalculateStressTensor(density, tau, nonEquilibriumF.data(), fEq.data(), stressTensor);
 
               for (unsigned rowIndex = 0; rowIndex < 3; ++rowIndex)
               {
