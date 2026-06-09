@@ -1,0 +1,101 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+    branches: [master]
+
+jobs:
+  compile:
+    name: "${{ matrix.arch }} | SSE=${{ matrix.sse }} AVX=${{ matrix.avx }}"
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # x64 builds – all four SSE × AVX combinations
+          - { arch: x64,   runner: ubuntu-22.04,     sse: ON,  avx: ON  }
+          - { arch: x64,   runner: ubuntu-22.04,     sse: ON,  avx: OFF }
+          - { arch: x64,   runner: ubuntu-22.04,     sse: OFF, avx: ON  }
+          - { arch: x64,   runner: ubuntu-22.04,     sse: OFF, avx: OFF }
+          # ARM64 builds – SSE3/AVX2 use x86-only intrinsics, so those flags
+          # are forced OFF at configure time even when ON is requested here
+          - { arch: arm64, runner: ubuntu-22.04-arm, sse: ON,  avx: ON  }
+          - { arch: arm64, runner: ubuntu-22.04-arm, sse: ON,  avx: OFF }
+          - { arch: arm64, runner: ubuntu-22.04-arm, sse: OFF, avx: ON  }
+          - { arch: arm64, runner: ubuntu-22.04-arm, sse: OFF, avx: OFF }
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y \
+            build-essential \
+            cmake \
+            openmpi-bin \
+            libopenmpi-dev \
+            libboost-all-dev \
+            zlib1g-dev \
+            libtirpc-dev \
+            libcppunit-dev \
+            autoconf \
+            automake \
+            libtool
+
+      - name: Cache dependency install
+        uses: actions/cache@v4
+        id: dep-cache
+        with:
+          path: dep/install
+          key: hemelb-deps-${{ matrix.runner }}-${{ hashFiles('dep/CMakeLists.txt', 'dep/patches/**') }}
+
+      - name: Build dependencies
+        if: steps.dep-cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p dep/build
+          cd dep/build
+          cmake \
+            -DCMAKE_C_COMPILER=mpicc \
+            -DCMAKE_CXX_COMPILER=mpicxx \
+            -DCTEMPLATE_PATCH_PYTHON=ON \
+            -DHEMELB_SUBPROJECT_MAKE_JOBS=$(nproc) \
+            ..
+          make -j$(nproc)
+
+      - name: Resolve SIMD flags for architecture
+        id: simd
+        run: |
+          # SSE3 and AVX2 rely on x86 intrinsics (<immintrin.h>) and are not
+          # compilable on ARM regardless of the matrix value
+          if [ "${{ matrix.arch }}" = "arm64" ]; then
+            echo "Requested SSE=${{ matrix.sse }} AVX=${{ matrix.avx }}; forcing both OFF on ARM"
+            echo "sse=OFF" >> "$GITHUB_OUTPUT"
+            echo "avx=OFF" >> "$GITHUB_OUTPUT"
+          else
+            echo "sse=${{ matrix.sse }}" >> "$GITHUB_OUTPUT"
+            echo "avx=${{ matrix.avx }}" >> "$GITHUB_OUTPUT"
+          fi
+
+      # The unit tests under src/unittests/ have not been maintained since 2022
+      # and reference APIs that the current source no longer provides (renamed
+      # methods, changed signatures, removed std::tr1). They do not compile
+      # against the current code, so the test build is disabled here and CI only
+      # verifies that the main hemepure executable compiles across the matrix.
+      - name: Configure CMake
+        run: |
+          mkdir -p src/build
+          cd src/build
+          cmake \
+            -DCMAKE_C_COMPILER=mpicc \
+            -DCMAKE_CXX_COMPILER=mpicxx \
+            -DHEMELB_USE_SSE3=${{ steps.simd.outputs.sse }} \
+            -DHEMELB_USE_AVX2=${{ steps.simd.outputs.avx }} \
+            -DHEMELB_USE_GMYPLUS=OFF \
+            -DHEMELB_USE_MPI_WIN=OFF \
+            -DHEMELB_BUILD_TESTS_UNIT=OFF \
+            ..
+
+      - name: Build
+        run: make -j$(nproc) -C src/build
