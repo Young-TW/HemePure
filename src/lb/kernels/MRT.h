@@ -164,7 +164,7 @@ namespace hemelb
           void SetMrtRelaxationParameters(std::vector<distribn_t>& newRelaxationParameters)
           {
             assert(newRelaxationParameters.size() == MomentBasis::NUM_KINETIC_MOMENTS);
-            collisionMatrix = newRelaxationParameters;
+            std::copy(newRelaxationParameters.begin(), newRelaxationParameters.end(), collisionMatrix.begin());
           }
 
         private:
