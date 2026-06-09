@@ -191,7 +191,7 @@ namespace hemelb
 					MockNetHelper::setUp(core_count,current_core);
 
 				  //inputNeededBlocks = std::vector<bool>(block_count);
-					inputNeededBlocks = std::unordered_set<site_t>();
+					inputNeededBlocks = std::tr1::unordered_set<site_t>();
 
 					for (site_t i = 0; i < block_count; i++)
 					{
@@ -218,7 +218,7 @@ namespace hemelb
 				proc_t size;
 				proc_t rank;
 			  //std::vector<bool> inputNeededBlocks;
-				std::unordered_set<site_t> inputNeededBlocks;
+				std::tr1::unordered_set<site_t> inputNeededBlocks;
 				Needs *mockedNeeds;
 			};
 

@@ -279,9 +279,8 @@ namespace hemelb
               std::vector<distribn_t> nonEquilibriumF(LatticeType::NUMVECTORS, 0.0);
               LatticeDensity density = 3.0;
               util::Vector3D<Dimensionless> wallNormal(1, 0, 0);
-              std::vector<distribn_t> fEqTraction(LatticeType::NUMVECTORS, 0.0);
               util::Vector3D<LatticeStress> traction;
-              LatticeType::CalculateTractionOnAPoint(density, 1.0, nonEquilibriumF.data(), fEqTraction.data(), wallNormal, traction);
+              LatticeType::CalculateTractionOnAPoint(density, 1.0, nonEquilibriumF.data(), wallNormal, traction);
 
               CPPUNIT_ASSERT_EQUAL(traction[0], (density - 1) * Cs2);
               CPPUNIT_ASSERT_EQUAL(traction[1], 0.0);
@@ -291,7 +290,6 @@ namespace hemelb
               LatticeType::CalculateTangentialProjectionTraction(density,
                                                                  1.0,
                                                                  nonEquilibriumF.data(),
-                                                                 fEqTraction.data(),
                                                                  wallNormal,
                                                                  tangentialComponentTraction);
 
@@ -325,8 +323,7 @@ namespace hemelb
 
               util::Vector3D<Dimensionless> wallNormal(1.0, 0.0, 0.0);
               util::Matrix3D stressTensor;
-              std::vector<distribn_t> fEq(LatticeType::NUMVECTORS, 0.0);
-              LatticeType::CalculateStressTensor(density, tau, nonEquilibriumF.data(), fEq.data(), stressTensor);
+              LatticeType::CalculateStressTensor(density, tau, nonEquilibriumF.data(), stressTensor);
 
               for (unsigned rowIndex = 0; rowIndex < 3; ++rowIndex)
               {

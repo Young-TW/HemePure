@@ -53,10 +53,9 @@ namespace hemelb
           void TestSimpleStressTensor()
           {
             std::vector<distribn_t> fNonEquilibrium(lb::lattices::D3Q15::NUMVECTORS, 0.0);
-            std::vector<distribn_t> fEq(lb::lattices::D3Q15::NUMVECTORS, 0.0);
 
             util::Matrix3D stressTensor;
-            lb::lattices::D3Q15::CalculateStressTensor(densityLatt, tau, fNonEquilibrium.data(), fEq.data(), stressTensor);
+            lb::lattices::D3Q15::CalculateStressTensor(densityLatt, tau, fNonEquilibrium.data(), stressTensor);
             util::Matrix3D stressTensorPhys = unitConverter->ConvertFullStressTensorToPhysicalUnits(stressTensor);
 
             CPPUNIT_ASSERT_DOUBLES_EQUAL(pressMmHg, stressTensorPhys[0][0] / mmHg_TO_PASCAL, epsilon);
@@ -68,7 +67,6 @@ namespace hemelb
           void TestSimpleTractionVector()
           {
             std::vector<distribn_t> fNonEquilibrium(lb::lattices::D3Q15::NUMVECTORS, 0.0);
-            std::vector<distribn_t> fEqTraction(lb::lattices::D3Q15::NUMVECTORS, 0.0);
             util::Vector3D<Dimensionless> wallNormal(0.0);
             wallNormal[0] = 1.0;
 
@@ -76,7 +74,6 @@ namespace hemelb
             lb::lattices::D3Q15::CalculateTractionOnAPoint(densityLatt,
                                                            tau,
                                                            fNonEquilibrium.data(),
-                                                           fEqTraction.data(),
                                                            wallNormal,
                                                            traction);
             util::Vector3D<PhysicalStress> tractionPhys = unitConverter->ConvertTractionToPhysicalUnits(traction,
